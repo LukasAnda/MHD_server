@@ -28,6 +28,7 @@ class MHDService : ApiInterface {
                 .baseUrl(API_BASE_URL)
                 .client(OkHttpClient()
                         .newBuilder()
+                        //We need longer timeouts, sometimes the server is slow
                         .callTimeout(2L, TimeUnit.MINUTES)
                         .readTimeout(2L, TimeUnit.MINUTES)
                         .writeTimeout(2L, TimeUnit.MINUTES)
@@ -66,6 +67,7 @@ class XMLHttpRequestInterceptor() : Interceptor {
 
 interface ApiInterface {
     companion object {
+        //The base url for calling
         val API_BASE_URL = "https://skeleton.dpb.sk/"
     }
 }

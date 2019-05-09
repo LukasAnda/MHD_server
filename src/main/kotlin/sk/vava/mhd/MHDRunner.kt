@@ -49,14 +49,19 @@ class MHDRunner {
         refreshSession()
     }
 
+    //Refresh the session ID so we can pull new info
     fun refreshSession() {
         logger.info("Refreshing session")
         service.service.getNewToken().enqueue {
             onResponse = {
+                //Extract Cookie
                 val cookie = it.headers().get("Set-Cookie")
                 sessionId = cookie?.substringBefore(";").toString().plus(";")
+                //Clear the DB
                 sessionRepository.deleteAll()
+                //Add new cookie to db
                 sessionRepository.save(Session(sessionId))
+                //Schedule timing task that will each minute pull new transport info
                 timingTask = scheduler.scheduleAtFixedRate(
                         { findTransport() },
                         0,
@@ -70,11 +75,14 @@ class MHDRunner {
         }
     }
 
+    //Find transports
     fun findTransport() {
+        //Get all bus positions
         service.service.getBusPositions(sessionId).enqueue {
             onResponse = {
                 it.body()?.let {
                     logger.info("Pulling transport info returned ${it.size} results")
+                    //Save all transports to DB
                     transportRepository.saveAll(it)
                     val sum = it + transports
                     val map = sum.groupBy { it.vehiclenumber }
@@ -88,6 +96,7 @@ class MHDRunner {
             onFailure = {
                 logger.error("Error getting transport info, refreshing session")
                 timingTask.cancel(true)
+                //Refresh the session if we got a wrong id
                 refreshSession()
             }
         }

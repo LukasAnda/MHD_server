@@ -2,12 +2,9 @@ package sk.vava.mhd.controller
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.geo.GeoModule
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import sk.vava.mhd.GeoGeometry
-import sk.vava.mhd.MHDRunner
 import sk.vava.mhd.api.MHDService
 import sk.vava.mhd.model.DepartureBoard
 import sk.vava.mhd.model.Location
@@ -71,6 +68,7 @@ class TransportController {
             val response = service.service.getStops(sessionId).execute()
             if (response.isSuccessful) {
                 response.body()?.let { stops.addAll(it) }
+                //Filter all by distinct, for some reason, they are there for mutliple times
                 val newStops = stops.distinctBy { Pair(it.passport, it.banister) }
                 stops.clear()
                 stops.addAll(newStops)
